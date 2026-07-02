@@ -115,12 +115,19 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 COPY --from=builder --chown=nextjs:nodejs /app/src/generated/prisma ./src/generated/prisma
 COPY --from=builder /app/prisma ./prisma
 
+# Fix Prisma: copy query engine to where Next.js standalone expects it
+COPY --from=builder /app/node_modules/.prisma/client /app/node_modules/.prisma/client
+
 USER nextjs
 
 EXPOSE 3107
 
 ENV PORT=3107
 ENV HOSTNAME="0.0.0.0"
+
+# Tell Prisma where to find the engine
+ENV PRISMA_CLIENT_ENGINE_TYPE=binary
+ENV PRISMA_QUERY_ENGINE_LIBRARY=/app/node_modules/.prisma/client/libquery_engine-debian-openssl-3.0.x.so.node
 
 # Start the application
 CMD ["node", "server.js"]
